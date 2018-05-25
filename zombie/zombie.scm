@@ -1,0 +1,85 @@
+(define-module (neon read))
+
+(use-modules ((ice-9 match)))
+(use-modules ((ice-9 rdelim)))
+(use-modules ((neon combinatorix)))
+
+
+(define char-set:lisp-delimiters
+  (char-set-union char-set:whitespace
+                  (char-set #\( #\) #\[ #\] #\{ #\})))
+
+(define char-set:number-digits (char-set #\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9))
+
+(define char-set:lisp-symbol
+  (char-set-complement char-set:lisp-delimiters))
+
+(define %space #(ws))
+
+(define (not-space? v)
+  (not (eq? v %space)))
+
+(define parse-whitespace (lift (const %space)
+                               (one-or-more (parse-char-set char-set:whitespace))))
+
+(define (xchars->string xchars)
+  (list->string (map xchar-char xchars)))
+
+(define parse-string (lift (match-lambda ((dq1 xchars dq2) (xchars->string xchars)))
+                           (each (parse-xchar #\")
+                                 (zero-or-more (either (lift (lambda (x) (cadr x))
+                                                               (each (parse-xchar #\\) (parse-xchar #\")))
+                                                       (otherwise (parse-xchar #\") any)))
+                                 (parse-xchar #\"))))
+
+(define parse-boolean (either (lift (const #f) (each (parse-xchar #\#) (parse-xchar #\f)))
+                              (lift (const #t) (each (parse-xchar #\#) (parse-xchar #\t)))))
+
+(define parse-symbol (lift
+                      (compose string->symbol xchars->string)
+                      (one-or-more (parse-char-set char-set:lisp-symbol))))
+
+
+(define parse-rational (lift (match-lambda ((a b c) (string->number
+                                                     (string-append (xchars->string a)
+                                                                    "/"
+                                                                    (xchars->string c)))))
+                             (each (one-or-more (parse-char-set char-set:number-digits))
+                                   (parse-xchar #\/)
+                                   (one-or-more (parse-char-set char-set:number-digits)))))
+
+(define parse-float
+  (lift
+   (lambda (x)
+     (string->number
+      (string-append (list->string (map xchar-char (list-ref x 0)))
+                     "."
+                     (list->string (map xchar-char (list-ref x 2))))))
+   (each (one-or-more (parse-char-set char-set:number-digits))
+         (parse-xchar #\.)
+         (one-or-more (parse-char-set char-set:number-digits)))))
+
+(define parse-number (lift (compose string->number xchars->string)
+                           (one-or-more (parse-char-set char-set:number-digits))))
+
+
+(define parse-open-paren (lift (const #f) (parse-xchar #\()))
+(define parse-close-paren (lift (const #f) (parse-xchar #\))))
+
+(define parse-exp (lift cadr
+                        (each parse-open-paren
+                              (lift (lambda (x) (filter not-space? x))
+                                    (zero-or-more (either parse-exp
+                                                          parse-boolean
+                                                          parse-rational
+                                                          parse-float
+                                                          parse-number
+                                                          parse-string
+                                                          parse-symbol
+                                                          parse-whitespace)))
+                              parse-close-paren)))
+
+(define-public (string->scm string)
+  (parse parse-exp string))
+
+(define-public read-safe (compose string->scm read-string))
