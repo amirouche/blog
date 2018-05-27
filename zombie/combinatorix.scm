@@ -42,6 +42,7 @@
           otherwise
           any
           parse-char-set
+          xchar?
           xchar-char)
   (import
     (rnrs)
@@ -112,9 +113,7 @@
                     (cons (make-xchar (car chars) line column offset) out))))))
 
   (define (parse parser string)
-    (match (parser (string->xchar-stream string))
-      (($ <result> value (? stream-null? stream)) value)
-      (else (error 'combinatorix else))))
+    (parser (string->xchar-stream string)))
 
   (define (parse-xchar char)
     (lambda (stream)
