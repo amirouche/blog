@@ -86,14 +86,7 @@
   (define parse-open-square (lift (const #f) (parse-xchar #\[)))
   (define parse-close-square (lift (const #f) (parse-xchar #\])))
 
-  (define parse-escape-skribe (each (parse-xchar #\,)
-                                    (parse-xchar #\()))
-
-
-  (define (skribe list)
-    (error 'not-implemented))
-
-  (define parse-skribe (lift (compose skribe cadr)
+  (define parse-skribe (lift cadr
                              (each parse-open-square
                                    (zero-or-more
                                     (either
@@ -101,7 +94,8 @@
                                      (lift cadr
                                            (each (parse-xchar #\,)
                                                  parse-exp))
-                                     ;; something else
+                                     ;; something else that is not a
+                                     ;; closing square
                                      (otherwise (parse-xchar #\])
                                                 any)))
                                    parse-close-square)))
