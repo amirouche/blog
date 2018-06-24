@@ -1,6 +1,10 @@
 #!chezscheme
 (import (zombie html))
+(import (zombie zread))
 
+(define (pk . args)
+  (display args)(newline)
+  (car (reverse args)))
 
 (define (template body)
   `((doctype html)
@@ -17,8 +21,8 @@
      (body ,body))))
 
 
-(define index
-  '((div (@ (id "hero"))
+(define (template/index index)
+  `((div (@ (id "hero"))
          (h1 (@ (id "title")) "Zombie Blog Generator")
          (div (@ (id "halloffame"))
               (img (@ (src "static/zombie-male.png")))
@@ -27,59 +31,20 @@
               (img (@ (src "static/zombie-intern.png")))
               (img (@ (src "static/zombie-windy.png")))))
     (div (@ (id "container"))
-         (h2 "Apocalypse future")
-         (p "spam egg foo bar baz lorem ipsum hipster spam egg foo bar
-baz lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam
-egg foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz
-lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz
-lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz
-lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz
-lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz
-lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz
-lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz")
-         (h2 "Antiquote")
-         (code (pre "lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz
-lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum"))
-         (h2 "Continuation")
-         (p "hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz
-lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz
-lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz
-lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz
-lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz
-lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz
-lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster spam egg foo bar baz lorem ipsum hipster spam egg foo bar baz
-lorem ipsum hipster spam egg foo bar baz lorem ipsum hipster spam egg
-foo bar baz lorem ipsum hipster spam egg foo bar baz lorem ipsum
-hipster ")
-         (h2 "The end of the end")
-         (p "All. Of. It."))))
+         ,index)))
 
-(sxml->html (template index) (current-output-port))
+
+(define (read-string filepath)
+  (list->string (call-with-input-file filepath
+                  (lambda (port)
+                    (let loop ((out '()))
+                      (let ((in (read-char port)))
+                        (if (eof-object? in)
+                            (reverse out)
+                            (loop (cons in out)))))))))
+
+(sxml->html (template
+             (template/index
+              (pk 'out (zread-string
+                        (read-string "index.scm")))))
+            (current-output-port))
