@@ -41,6 +41,7 @@
    otherwise
    parse
    parse-char-set
+   parse-predicate
    parse-xchar
    result-value
    xchar-char
@@ -127,6 +128,16 @@
                   (continue value next)
                   (fail stream parse-xchar char))
               (fail stream parse-xchar char))))))
+
+  (define (parse-predicate predicate?)
+    (lambda (stream)
+      (call-with-values stream
+        (lambda (value next)
+          (if next
+              (if (predicate? value)
+                  (continue value next)
+                  (fail stream (cons parse-predicate predicate?) value))
+              (fail stream (cons parse-predicate predicate?) value))))))
 
   (define (%either . parsers)
     (lambda (stream)

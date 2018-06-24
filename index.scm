@@ -1,1 +1,1 @@
-(p "echo alpha bravo")
+(p [echo ,(b [alpha]) bravo])

@@ -7,7 +7,9 @@
     (only (scheme) reverse!)
     (srfi s14 char-sets)
     (matchable)
-    (zombie combinatorix))
+    (zombie combinatorix)
+    (zombie streams)
+    )
 
   (define (const value)
     (lambda args
@@ -86,7 +88,16 @@
   (define parse-open-square (lift (const #f) (parse-xchar #\[)))
   (define parse-close-square (lift (const #f) (parse-xchar #\])))
 
-  (define parse-skribe (lift cadr
+  (define parse-stringify
+    (zero-or-more
+     (either
+      (lift xchars->string (one-or-more (parse-predicate xchar?)))
+      any)))
+
+  (define (stringify exp)
+    (result-value (parse-stringify (list->stream exp))))
+
+  (define parse-skribe (lift (compose stringify cadr)
                              (each parse-open-square
                                    (zero-or-more
                                     (either
