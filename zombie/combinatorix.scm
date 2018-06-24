@@ -32,18 +32,21 @@
 ;;
 ;;; Code:
 (library (zombie combinatorix)
-  (export lift
-          parse
-          parse-xchar
-          either
-          each
-          zero-or-more
-          one-or-more
-          otherwise
-          any
-          parse-char-set
-          xchar?
-          xchar-char)
+  (export
+   any
+   each
+   either
+   lift
+   one-or-more
+   otherwise
+   parse
+   parse-char-set
+   parse-xchar
+   result-value
+   xchar-char
+   xchar?
+   zero-or-more
+   )
   (import
     (rnrs)
     (only (chezscheme) reverse!)
