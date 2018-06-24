@@ -45,6 +45,6 @@
 
 (sxml->html (template
              (template/index
-              (pk 'out (zread-string
-                        (read-string "index.scm")))))
+              (cdr (zread-string
+                    (read-string "index.scm")))))
             (current-output-port))
