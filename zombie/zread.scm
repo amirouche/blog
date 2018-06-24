@@ -115,5 +115,5 @@
                                 parse-close-paren)))
 
   (define (zread-string string)
-    (parse parse-exp string))
+    (result-value (parse parse-exp string)))
 )
